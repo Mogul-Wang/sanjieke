@@ -166,7 +166,7 @@ class AutoCourseBot:
                         status = "未完成 ⭕"
                         print(title, status, "现在即将学习......")
                         chapters[idx - 1].click()
-                        self.play_video(title, 1, index=idx)
+                        self.play_video(title=title, ctype=1, index=idx, sid=0)
 
         except Exception as e:
             print(f"⚠️ 小节异常，跳过: {e}")
