@@ -154,10 +154,9 @@ class AutoCourseBot:
 
             if len(chapters) > 0:
                 for idx, chapter in enumerate(chapters, 1):
-                    title = chapter.find_element(By.CSS_SELECTOR, ".node-name-con").text.strip()
                     menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
                     chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")[:-1]
-
+                    title = chapters[idx - 1].find_element(By.CSS_SELECTOR, ".node-name-con").text.strip()
                     # 判断是否完成
                     if "chapter-finish" in chapters[idx - 1].get_attribute("class"):
                         status = "已完成 ✅"
@@ -166,8 +165,7 @@ class AutoCourseBot:
                         status = "未完成 ⭕"
                         print(title, status, "现在即将学习......")
                         chapters[idx - 1].click()
-                        self.play_video(title=title, ctype=1, index=idx, sid=0)
-
+                        self.play_video(title, 1, idx, 0)
         except Exception as e:
             print(f"⚠️ 小节异常，跳过: {e}")
 
