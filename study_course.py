@@ -12,6 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
 import configparser
 
 # 读取配置文件
@@ -42,6 +43,86 @@ class AutoCourseBot:
                 time.sleep(3)
         except NoSuchElementException:
             pass
+
+    def handle_leave_page_tip(self, wait_time=5):
+        try:
+            # 等待弹窗容器出现，最多等待wait_time秒
+            modal_container = WebDriverWait(self.driver, wait_time).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.leave-page-tip-modal-container"))
+            )
+
+            # 确认弹窗可见
+            if modal_container.is_displayed():
+                print("检测到学习状态中断提醒弹窗")
+
+                # 查找并点击"继续学习"按钮
+                continue_button = modal_container.find_element(
+                    By.CSS_SELECTOR, "button.button"
+                )
+                continue_button.click()
+                print("已点击继续学习按钮")
+
+                # 等待弹窗消失
+                WebDriverWait(self.driver, wait_time).until(
+                    EC.invisibility_of_element_located((By.CSS_SELECTOR, "div.leave-page-tip-modal-container"))
+                )
+        except TimeoutException:
+            pass
+        # except Exception as e:
+        #     print(f"处理弹窗时发生错误: {str(e)}")
+        try:
+            play_btn = WebDriverWait(self.driver, 5).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-play .xgplayer-icon-play"))
+            )
+            play_btn.click()
+        except NoSuchElementException:
+            print(f"出现中断弹窗后,点击播放时出现异常!")
+
+    def click_ai_option(self):
+        try:
+            # 此try中的代码为规避系统检测
+            # 找出AI题目标签
+            quiz_main = self.driver.find_element(By.CSS_SELECTOR,
+                                            "div.quiz-main")
+            time.sleep(2)
+            if quiz_main:
+                # 获取所有选项标签
+                options = quiz_main.find_elements(By.TAG_NAME, "li")
+
+                # 随机选择一个选项
+                random_option = random.choice(options)
+
+                # 点击选项中的单选按钮（quiz-radio元素）
+                # 优先点击单选按钮区域，更符合实际交互逻辑
+                # radio_button = random_option.find_element(By.CLASS_NAME, "quiz-radio")
+                random_option.click()
+        except NoSuchElementException:
+            pass
+
+    def set_playback_rate_to_2x(self, wait_time=5):
+
+        try:
+            # 等待播放速度控制元素出现
+            playbackrate_element = WebDriverWait(self.driver, wait_time).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "xg-playbackrate.xgplayer-playbackrate"))
+            )
+
+            # 点击播放速度控制元素，展开速度选择列表
+            playbackrate_element.click()
+            print("已点击播放速度控制器，展开选择列表")
+
+            # 查找并点击2倍速选项（cname="2"的li元素）
+            two_x_element = WebDriverWait(self.driver, wait_time).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-playbackrate.xgplayer-playbackrate li[cname='2']"))
+            )
+            two_x_element.click()
+            print("已设置播放速度为2倍速")
+        except TimeoutException:
+            print("超时：未找到播放速度控制元素或2倍速选项")
+        except NoSuchElementException:
+            print("未找到播放速度控制元素或2倍速选项")
+        except Exception as e:
+            print(f"设置播放速度时发生错误: {str(e)}")
 
     def have_cretificate(self):
         try:
@@ -129,9 +210,14 @@ class AutoCourseBot:
         """学习单个章节/小节"""
         try:
             menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
-            chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")[:-1]
-            sections = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-section-item")
-
+            try:
+                chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")[:-1]
+            except:
+                chapters=[]
+            try:
+                sections = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-section-item")
+            except:
+                sections=[]
             # 判断是否是大章节（有子小节）
             if len(sections) > 0 :
                 for sid, section in enumerate(sections, start=1):
@@ -178,17 +264,29 @@ class AutoCourseBot:
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-start .xgplayer-icon-play"))
                 )
                 play_btn.click()
+                time.sleep(3)
+                self.set_playback_rate_to_2x()
             except:
                 play_btn = WebDriverWait(self.driver, 5).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-play .xgplayer-icon-play"))
                 )
                 play_btn.click()
+                time.sleep(3)
+                self.set_playback_rate_to_2x()
             print(f"▶ {title} 播放中...")
 
             # 模拟学习
             while True:
                 time.sleep(random.uniform(5, 8))
+                # 检测是否出现评价弹窗
                 self.handle_popup()
+                # 检测是否出现中断学习弹窗
+                try:
+                    self.handle_leave_page_tip()
+                except:
+                    pass
+                # 如果有AI选择
+                self.click_ai_option()
                 # 判断是什么类型的课程 section or chapter
                 menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
                 if ctype == 1:
