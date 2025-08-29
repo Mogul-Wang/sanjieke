@@ -264,14 +264,14 @@ class AutoCourseBot:
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-start .xgplayer-icon-play"))
                 )
                 play_btn.click()
-                time.sleep(3)
+                time.sleep(1)
                 self.set_playback_rate_to_2x()
             except:
                 play_btn = WebDriverWait(self.driver, 5).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-play .xgplayer-icon-play"))
                 )
                 play_btn.click()
-                time.sleep(3)
+                time.sleep(1)
                 self.set_playback_rate_to_2x()
             print(f"▶ {title} 播放中...")
 
