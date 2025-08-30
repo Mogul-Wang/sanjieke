@@ -32,7 +32,7 @@
     - 更新绕开部分校验功能
 - **如下方式执行**：
   - ![img.png](img/img.png)
-  - ![操作展示.gif](img%2F%B2%D9%D7%F7%D5%B9%CA%BE.gif)
+  - ![demo.gif](img/demo.gif)
 ---
 
 ## 环境依赖
