@@ -33,15 +33,34 @@ class AutoCourseBot:
         self.password = password
 
     # ========== 工具函数 ==========
+    # def handle_popup(self):
+    #     """处理学习过程中的弹窗"""
+    #     try:
+    #         popup_btn = self.driver.find_element(By.CSS_SELECTOR, "div.score-popup button.close-btn")
+    #         if popup_btn.is_displayed():
+    #             popup_btn.click()
+    #             print("⚡ 弹窗已关闭，继续学习")
+    #             time.sleep(3)
+    #     except NoSuchElementException:
+    #         pass
     def handle_popup(self):
-        """处理学习过程中的弹窗"""
+        """处理学习过程中的弹窗（优化版）"""
         try:
-            popup_btn = self.driver.find_element(By.CSS_SELECTOR, "div.score-popup button.close-btn")
-            if popup_btn.is_displayed():
+            # 关键：等待弹窗按钮出现（最多等10秒），确保弹窗已加载
+            popup_btn = WebDriverWait(self.driver, 5).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "div.score-popup button.close-btn"))
+            )
+
+            # 确认按钮可见且可点击
+            if popup_btn.is_displayed() and popup_btn.is_enabled():
                 popup_btn.click()
                 print("⚡ 弹窗已关闭，继续学习")
+                # 等待弹窗消失（避免后续操作受影响）
+                WebDriverWait(self.driver, 10).until(
+                    EC.invisibility_of_element_located((By.CSS_SELECTOR, "div.score-popup"))
+                )
                 time.sleep(3)
-        except NoSuchElementException:
+        except Exception:
             pass
 
     def handle_leave_page_tip(self, wait_time=5):
@@ -233,10 +252,16 @@ class AutoCourseBot:
                         menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
                         sections = menu_container.find_elements(By.CSS_SELECTOR,"div.chapter-container.chapter-section-item")
                         sec_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .node-item")
+                        status_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .status-con")
                         sec_title = sec_list[sec_idx - 1].find_element(By.CSS_SELECTOR, ".node-name-con").text.strip()
-                        print(f"➡ 学习子小节 {sec_idx}: {sec_title}")
-                        sec_list[sec_idx - 1].click()
-                        self.play_video(sec_title, 2, sec_idx, sid)
+                        if "section-finish" in status_list[sec_idx - 1].get_attribute("class"):
+                            status = "已完成 ✅"
+                            print(title, status)
+                        else:
+                            status = "未完成 ⭕"
+                            print(sec_title, status, "现在即将学习......")
+                            sec_list[sec_idx - 1].click()
+                            self.play_video(sec_title, 2, sec_idx, sid)
 
             if len(chapters) > 0:
                 for idx, chapter in enumerate(chapters, 1):
@@ -337,7 +362,6 @@ class AutoCourseBot:
         finally:
             self.driver.close()
             self.driver.switch_to.window(self.driver.window_handles[0])
-
 
 if __name__ == "__main__":
     bot = AutoCourseBot(USERNAME, PASSWORD)
