@@ -256,7 +256,7 @@ class AutoCourseBot:
                         sec_title = sec_list[sec_idx - 1].find_element(By.CSS_SELECTOR, ".node-name-con").text.strip()
                         if "section-finish" in status_list[sec_idx - 1].get_attribute("class"):
                             status = "已完成 ✅"
-                            print(title, status)
+                            print(sec_title, status)
                         else:
                             status = "未完成 ⭕"
                             print(sec_title, status, "现在即将学习......")
