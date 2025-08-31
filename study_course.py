@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
 import configparser
 
 # 读取配置文件
@@ -26,7 +27,10 @@ PASSWORD = config.get("login", "password")
 
 class AutoCourseBot:
     def __init__(self, username, password):
-        self.driver = webdriver.Chrome()
+        # 配置Chrome选项，启用静音
+        chrome_options = Options()
+        chrome_options.add_argument("--mute-audio")
+        self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.maximize_window()
         self.wait = WebDriverWait(self.driver, 15)
         self.username = username
