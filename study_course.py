@@ -230,7 +230,7 @@ class AutoCourseBot:
         try:
             menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
             try:
-                chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")[:-1]
+                chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")
             except:
                 chapters=[]
             try:
@@ -246,7 +246,10 @@ class AutoCourseBot:
                     print(f"📂 进入大章节: {title}")
                     section_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .node-item")
                     time.sleep(1)
-                    sections[sid - 1].click()
+                    self.driver.execute_script("arguments[0].scrollIntoView();", sections[sid - 1])
+                    # 判断是否已点击
+                    if "chapter-active" not in sections[sid - 1].get_attribute("class"):
+                        sections[sid - 1].click()
                     # 找到子小节
                     for sec_idx, section_sec in enumerate(section_list, start=1):
                         menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
@@ -260,6 +263,12 @@ class AutoCourseBot:
                         else:
                             status = "未完成 ⭕"
                             print(sec_title, status, "现在即将学习......")
+                            self.driver.execute_script("arguments[0].scrollIntoView();", sec_list[sec_idx - 1])
+                            time.sleep(2)
+                            WebDriverWait(self.driver, 5).until(
+                                EC.element_to_be_clickable((By.CSS_SELECTOR, ".section-container .node-item"))
+                            )
+
                             sec_list[sec_idx - 1].click()
                             self.play_video(sec_title, 2, sec_idx, sid)
 
@@ -275,6 +284,12 @@ class AutoCourseBot:
                     else:
                         status = "未完成 ⭕"
                         print(title, status, "现在即将学习......")
+                        self.driver.execute_script("arguments[0].scrollIntoView();", chapters[idx - 1])
+                        time.sleep(2)
+
+                        WebDriverWait(self.driver, 5).until(
+                            EC.element_to_be_clickable((By.CSS_SELECTOR, ".chapter-container .node-item"))
+                        )
                         chapters[idx - 1].click()
                         self.play_video(title, 1, idx, 0)
         except Exception as e:
@@ -302,7 +317,7 @@ class AutoCourseBot:
 
             # 模拟学习
             while True:
-                time.sleep(random.uniform(5, 8))
+                time.sleep(random.uniform(3, 5))
                 # 检测是否出现评价弹窗
                 self.handle_popup()
                 # 检测是否出现中断学习弹窗
