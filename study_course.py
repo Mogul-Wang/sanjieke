@@ -275,7 +275,7 @@ class AutoCourseBot:
             if len(chapters) > 0:
                 for idx, chapter in enumerate(chapters, 1):
                     menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
-                    chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")[:-1]
+                    chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-item")
                     title = chapters[idx - 1].find_element(By.CSS_SELECTOR, ".node-name-con").text.strip()
                     # 判断是否完成
                     if "chapter-finish" in chapters[idx - 1].get_attribute("class"):
