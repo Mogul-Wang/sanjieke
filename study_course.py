@@ -215,7 +215,7 @@ class AutoCourseBot:
         course_links = card_module.find_elements(By.CSS_SELECTOR, "a.card-item")
         if course_links:
             # 0为通用 1为专业
-            course_links[1].click()
+            course_links[0].click()
             print("点击第一个课程入口，进入学习页面。")
             time.sleep(5)
             # 获取所有 a 标签
