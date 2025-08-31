@@ -159,6 +159,20 @@ class AutoCourseBot:
             # 未找到父标签
             return False
 
+    def is_video_playing_normally(self, timeout=5):
+
+        try:
+            pause_icon = WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "xg-play .xgplayer-icon .xgplayer-icon-pause")  # 暂停图标
+                )
+            )
+            return pause_icon.is_displayed()
+
+        except TimeoutException:
+            # 超时说明任一条件未满足（加载中/未播放/控件未出现）
+            return False
+
     def get_progress(self):
         """获取课程进度（已完成节数，总节数）"""
         try:
@@ -200,7 +214,8 @@ class AutoCourseBot:
         # 找到课程卡片里的所有入口 <a class="card-item">
         course_links = card_module.find_elements(By.CSS_SELECTOR, "a.card-item")
         if course_links:
-            course_links[0].click()
+            # 0为通用 1为专业
+            course_links[1].click()
             print("点击第一个课程入口，进入学习页面。")
             time.sleep(5)
             # 获取所有 a 标签
@@ -263,7 +278,7 @@ class AutoCourseBot:
                         else:
                             status = "未完成 ⭕"
                             print(sec_title, status, "现在即将学习......")
-                            self.driver.execute_script("arguments[0].scrollIntoView();", sec_list[sec_idx - 1])
+                            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sec_list[sec_idx - 1])
                             time.sleep(2)
                             WebDriverWait(self.driver, 5).until(
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".section-container .node-item"))
@@ -284,12 +299,13 @@ class AutoCourseBot:
                     else:
                         status = "未完成 ⭕"
                         print(title, status, "现在即将学习......")
-                        self.driver.execute_script("arguments[0].scrollIntoView();", chapters[idx - 1])
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", chapters[idx - 1])
                         time.sleep(2)
 
                         WebDriverWait(self.driver, 5).until(
                             EC.element_to_be_clickable((By.CSS_SELECTOR, ".chapter-container .node-item"))
                         )
+
                         chapters[idx - 1].click()
                         self.play_video(title, 1, idx, 0)
         except Exception as e:
@@ -314,9 +330,11 @@ class AutoCourseBot:
                 time.sleep(1)
                 self.set_playback_rate_to_2x()
             print(f"▶ {title} 播放中...")
-
+            if not self.is_video_playing_normally():
+                return
             # 模拟学习
             while True:
+
                 time.sleep(random.uniform(3, 5))
                 # 检测是否出现评价弹窗
                 self.handle_popup()
@@ -356,13 +374,10 @@ class AutoCourseBot:
                 print("该课程已完成！")
             else:
                 self.driver.switch_to.window(self.driver.window_handles[-1])
-
                 h1_text = self.driver.find_element(By.TAG_NAME, "h1").text
-
                 study_btn = self.wait.until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "a.course-study-button"))
                 )
-
                 study_btn.click()
                 print(f"🎓 开始学习课程: {h1_text}")
                 time.sleep(5)
