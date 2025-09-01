@@ -24,6 +24,8 @@ config.read("config.ini", encoding="utf-8")
 USERNAME = config.get("login", "username")
 PASSWORD = config.get("login", "password")
 
+# 获取学习课程类型
+course_type = config.get("course_type","type")
 
 class AutoCourseBot:
     def __init__(self, username, password):
@@ -209,7 +211,7 @@ class AutoCourseBot:
         login_btn.click()
         print("✅ 登录成功")
 
-    def get_all_course_links(self):
+    def get_all_course_links(self, course_type):
         """翻页获取所有课程链接"""
         card_module = self.wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.card-item-container"))
@@ -219,7 +221,7 @@ class AutoCourseBot:
         course_links = card_module.find_elements(By.CSS_SELECTOR, "a.card-item")
         if course_links:
             # 0为通用 1为专业
-            course_links[0].click()
+            course_links[int(course_type) - 1].click()
             print("点击第一个课程入口，进入学习页面。")
             time.sleep(5)
             # 获取所有 a 标签
@@ -265,7 +267,7 @@ class AutoCourseBot:
                     print(f"📂 进入大章节: {title}")
                     section_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .node-item")
                     time.sleep(1)
-                    self.driver.execute_script("arguments[0].scrollIntoView();", sections[sid - 1])
+                    self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", sections[sid - 1])
                     # 判断是否已点击
                     if "chapter-active" not in sections[sid - 1].get_attribute("class"):
                         sections[sid - 1].click()
@@ -282,7 +284,7 @@ class AutoCourseBot:
                         else:
                             status = "未完成 ⭕"
                             print(sec_title, status, "现在即将学习......")
-                            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", sec_list[sec_idx - 1])
+                            self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", sec_list[sec_idx - 1])
                             time.sleep(2)
                             WebDriverWait(self.driver, 5).until(
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".section-container .node-item"))
@@ -303,7 +305,7 @@ class AutoCourseBot:
                     else:
                         status = "未完成 ⭕"
                         print(title, status, "现在即将学习......")
-                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", chapters[idx - 1])
+                        self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", chapters[idx - 1])
                         time.sleep(2)
 
                         WebDriverWait(self.driver, 5).until(
@@ -320,6 +322,19 @@ class AutoCourseBot:
         try:
             # 点击播放按钮
             try:
+                # 定位视频容器，确保其在可视区域内
+                try:
+                    video_container = WebDriverWait(self.driver, 5).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, "div.video-player-container"))  # 视频容器选择器
+                    )
+                    # 滚动到视频容器可见（scrollIntoView() 会自动将元素滚动到可视区域）
+                    self.driver.execute_script(
+                        "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
+                        video_container
+                    )
+                    time.sleep(0.5)  # 短暂等待滚动完成
+                except:
+                    pass
                 play_btn = WebDriverWait(self.driver, 5).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "xg-start .xgplayer-icon-play"))
                 )
@@ -337,9 +352,15 @@ class AutoCourseBot:
             if not self.is_video_playing_normally():
                 return
             # 模拟学习
+            # 增加最大播放时长限制（避免无限循环，可根据视频实际时长调整）
+            max_play_time = 1800  # 1小时超时
+            start_time = time.time()
             while True:
-
-                time.sleep(random.uniform(3, 5))
+                # 检查是否超时
+                if time.time() - start_time > max_play_time:
+                    print(f"⏰ {title} 播放超时（超过{max_play_time}秒）")
+                    break
+                time.sleep(random.uniform(2, 3))
                 # 检测是否出现评价弹窗
                 self.handle_popup()
                 # 检测是否出现中断学习弹窗
@@ -400,6 +421,6 @@ class AutoCourseBot:
 if __name__ == "__main__":
     bot = AutoCourseBot(USERNAME, PASSWORD)
     bot.login()
-    links = bot.get_all_course_links()
+    links = bot.get_all_course_links(course_type)
     for t, href in links:
         bot.study_course(href)
