@@ -369,7 +369,7 @@ class AutoCourseBot:
                 except:
                     pass
                 # 如果有AI选择
-                self.click_ai_option()
+                # self.click_ai_option()
                 # 判断是什么类型的课程 section or chapter
                 menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
                 if ctype == 1:
