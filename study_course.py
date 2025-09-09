@@ -27,6 +27,9 @@ PASSWORD = config.get("login", "password")
 # 获取学习课程类型
 course_type = config.get("course_type","type")
 
+url = config.get("url", "url")
+years = config.get("years","years")
+
 class AutoCourseBot:
     def __init__(self, username, password):
         # 配置Chrome选项，启用静音
@@ -193,8 +196,7 @@ class AutoCourseBot:
 
     # ========== 核心功能 ==========
     def login(self):
-        self.driver.get("https://sntelelearning.b.sanjieke.cn/login/sign_in")
-
+        self.driver.get(url)
         username_input = self.wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "input#rc_select_0"))
         )
@@ -213,9 +215,10 @@ class AutoCourseBot:
 
     def get_all_course_links(self, course_type):
         """翻页获取所有课程链接"""
-        card_module = self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.card-item-container"))
+        card_modules = self.wait.until(
+            EC.presence_of_all_elements_located ((By.CSS_SELECTOR, "div.card-module"))
         )
+        card_module = card_modules[int(years) - 1]
         time.sleep(5)
         # 找到课程卡片里的所有入口 <a class="card-item">
         course_links = card_module.find_elements(By.CSS_SELECTOR, "a.card-item")
@@ -374,7 +377,8 @@ class AutoCourseBot:
                 menu_container = self.driver.find_element(By.CSS_SELECTOR, "div.menu-container")
                 if ctype == 1:
                     chapters = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container")
-                    if "chapter-finish" in chapters[index - 1].get_attribute("class"):
+                    # if "chapter-finish" in chapters[index - 1].get_attribute("class"):
+                    if "finish" in chapters[index - 1].get_attribute("class"):
                         print(f"✅ {title} 已完成")
                         break
                 else:
