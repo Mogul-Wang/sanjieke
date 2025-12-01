@@ -23,5 +23,5 @@ if __name__ == "__main__":
     links = bot.get_all_course_links(course_type)
     # 包含35课程，想刷哪一个课程可以在links中输入相应的数值单独刷
     for i in (1,5):
-        for t, href in links[0:45]:
+        for t, href in links:
             bot.study_course(href)
