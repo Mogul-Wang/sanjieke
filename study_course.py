@@ -282,7 +282,7 @@ class AutoCourseBot:
                         sec_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .node-item")
                         status_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .status-con")
                         sec_title = sec_list[sec_idx - 1].find_element(By.CSS_SELECTOR, ".node-name-con").text.strip()
-                        if "section-finish" in status_list[sec_idx - 1].get_attribute("class"):
+                        if "section-finish" in status_list[sec_idx - 1].get_attribute("class") or "homework-finished-icon" in status_list[sec_idx - 1].get_attribute("class"):
                             status = "已完成 ✅"
                             print(sec_title, status)
                         else:
