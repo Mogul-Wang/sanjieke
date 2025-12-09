@@ -386,7 +386,7 @@ class AutoCourseBot:
                     sections = menu_container.find_elements(By.CSS_SELECTOR, "div.chapter-container.chapter-section-item")
                     section_list = sections[sid - 1].find_elements(By.CSS_SELECTOR, ".section-container .node-item")
                     # 检查是否完成
-                    if len(section_list[index - 1].find_elements(By.CSS_SELECTOR, "div.status-con.section-finish")) == 1:
+                    if len(section_list[index - 1].find_elements(By.CSS_SELECTOR, "div.status-con.section-finish")) == 1 or len(section_list[index - 1].find_elements(By.CSS_SELECTOR, "div.status-con.homework-finished-icon")) == 1:
                         print(f"✅ {title} 已完成")
                         break
 
@@ -427,6 +427,6 @@ if __name__ == "__main__":
     bot = AutoCourseBot(USERNAME, PASSWORD)
     bot.login()
     links = bot.get_all_course_links(course_type)
-    for i in (1, 5):
+    for i in (1, 3):
         for t, href in links:
             bot.study_course(href)
