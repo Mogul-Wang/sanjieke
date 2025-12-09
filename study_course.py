@@ -272,7 +272,8 @@ class AutoCourseBot:
                     time.sleep(1)
                     self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", sections[sid - 1])
                     # 判断是否已点击
-                    if "chapter-active" not in sections[sid - 1].get_attribute("class"):
+                    if "chapter-active" not in sections[sid - 1].find_element(By.CSS_SELECTOR, "div.chapter-con").get_attribute("class"):
+                    # if "chapter-active" not in sections[sid - 1].get_attribute("class"):
                         sections[sid - 1].click()
                     # 找到子小节
                     for sec_idx, section_sec in enumerate(section_list, start=1):
@@ -426,5 +427,6 @@ if __name__ == "__main__":
     bot = AutoCourseBot(USERNAME, PASSWORD)
     bot.login()
     links = bot.get_all_course_links(course_type)
-    for t, href in links:
-        bot.study_course(href)
+    for i in (1, 5):
+        for t, href in links:
+            bot.study_course(href)
